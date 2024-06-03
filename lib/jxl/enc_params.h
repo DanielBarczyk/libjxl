@@ -186,6 +186,12 @@ struct CompressParams {
 
   JxlDebugImageCallback debug_image = nullptr;
   void* debug_image_opaque;
+
+  // export and import encoder state after it is computed
+  bool export_encoder_state = false;
+  const char * export_filename = nullptr;
+  bool import_encoder_state = false;
+  const char * import_filename = nullptr;
 };
 
 static constexpr float kMinButteraugliForDynamicAR = 0.5f;

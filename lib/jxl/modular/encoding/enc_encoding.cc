@@ -534,6 +534,7 @@ Status ModularEncode(const Image &image, const ModularOptions &options,
                      size_t *total_pixels, const Tree *tree,
                      GroupHeader *header, std::vector<Token> *tokens,
                      size_t *width) {
+  fprintf(stdout, "ModularEncode in\n");
   if (image.error) return JXL_FAILURE("Invalid image");
   JxlMemoryManager *memory_manager = image.memory_manager();
   size_t nb_channels = image.channel.size();
@@ -708,6 +709,7 @@ Status ModularGenericCompress(Image &image, const ModularOptions &opts,
                               size_t *total_pixels, const Tree *tree,
                               GroupHeader *header, std::vector<Token> *tokens,
                               size_t *width) {
+  fprintf(stdout, "ModularGenericCompress in\n");
   if (image.w == 0 || image.h == 0) return true;
   ModularOptions options = opts;  // Make a copy to modify it.
 

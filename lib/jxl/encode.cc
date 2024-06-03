@@ -696,7 +696,8 @@ bool EncodeFrameIndexBox(const jxl::JxlEncoderFrameIndexBox& frame_index_box,
 
 }  // namespace
 
-jxl::Status JxlEncoderStruct::ProcessOneEnqueuedInput() {
+jxl::Status JxlEncoderStruct::ProcessOneEnqueuedInput() { // LANDMARK: Main encode function
+  fprintf(stdout, "ProcessOneEnqueuedInput\n"); 
   jxl::PaddedBytes header_bytes{&memory_manager};
 
   jxl::JxlEncoderQueuedInput& input = input_queue[0];
@@ -1477,6 +1478,18 @@ JxlEncoderStatus JxlEncoderSetFrameDistance(
     distance = 0.01f;
   }
   frame_settings->values.cparams.butteraugli_distance = distance;
+  return JxlErrorOrStatus::Success();
+}
+
+JxlEncoderStatus JxlEncoderSetExportFile(JxlEncoderFrameSettings* frame_settings, const char * filename) {
+  frame_settings->values.cparams.export_encoder_state = true;
+  frame_settings->values.cparams.export_filename = filename;
+  return JxlErrorOrStatus::Success();
+}
+
+JxlEncoderStatus JxlEncoderSetImportFile(JxlEncoderFrameSettings* frame_settings, const char * filename) {
+  frame_settings->values.cparams.import_encoder_state = true;
+  frame_settings->values.cparams.import_filename = filename;
   return JxlErrorOrStatus::Success();
 }
 

@@ -1284,6 +1284,7 @@ Status ModularFrameEncoder::EncodeGlobalInfo(bool streaming_mode,
 Status ModularFrameEncoder::EncodeStream(BitWriter* writer, AuxOut* aux_out,
                                          size_t layer,
                                          const ModularStreamId& stream) {
+  fprintf(stdout, "EncodeStream\n");
   size_t stream_id = stream.ID(frame_dim_);
   if (stream_images_[stream_id].channel.empty()) {
     JXL_DEBUG_V(10, "Modular stream %" PRIuS " is empty.", stream_id);

@@ -78,6 +78,8 @@ struct JXLCompressParams {
   void* debug_image_opaque = nullptr;
   JxlEncoderStats* stats = nullptr;
   bool allow_expert_options = false;
+  const char* export_file = nullptr;
+  const char* import_file = nullptr;
 
   void AddOption(JxlEncoderFrameSettingId id, int64_t val) {
     options.emplace_back(id, val, 0);

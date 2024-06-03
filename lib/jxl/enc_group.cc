@@ -22,6 +22,7 @@
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_cache.h"
 #include "lib/jxl/enc_params.h"
+#include "lib/jxl/enc_state_import.h"
 #include "lib/jxl/enc_transforms-inl.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/quantizer-inl.h"

@@ -1593,6 +1593,32 @@ JXL_EXPORT void JxlEncoderSetDebugImageCallback(
 JXL_EXPORT void JxlEncoderCollectStats(JxlEncoderFrameSettings* frame_settings,
                                        JxlEncoderStats* stats);
 
+/**
+ * Makes the encoder save the model to a file.
+ * @ref JxlEncoderSetFrameDistance will be used.
+ *
+ * @param frame_settings set of options and metadata for this frame. Also
+ * includes reference to the encoder object.
+ * @param filename filename to save model to.
+ * @return ::JXL_ENC_SUCCESS if the operation was successful, @ref
+ * JXL_ENC_ERROR otherwise.
+ */
+JXL_EXPORT JxlEncoderStatus JxlEncoderSetExportFile(
+    JxlEncoderFrameSettings* frame_settings, const char * filename);
+
+/**
+ * Makes the encoder import the model from a file.
+ * @ref JxlEncoderSetFrameDistance will be used.
+ *
+ * @param frame_settings set of options and metadata for this frame. Also
+ * includes reference to the encoder object.
+ * @param filename filename to load model from.
+ * @return ::JXL_ENC_SUCCESS if the operation was successful, @ref
+ * JXL_ENC_ERROR otherwise.
+ */
+JXL_EXPORT JxlEncoderStatus JxlEncoderSetImportFile(
+    JxlEncoderFrameSettings* frame_settings, const char * filename);
+
 #if defined(__cplusplus) || defined(c_plusplus)
 }
 #endif

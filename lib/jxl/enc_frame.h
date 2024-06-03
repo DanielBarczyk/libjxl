@@ -20,6 +20,7 @@
 #include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/enc_cache.h"
 #include "lib/jxl/enc_params.h"
+#include "lib/jxl/enc_state_import.h"
 #include "lib/jxl/encode_internal.h"
 #include "lib/jxl/frame_header.h"
 #include "lib/jxl/image_bundle.h"

@@ -56,6 +56,7 @@
 #include "lib/jxl/enc_photon_noise.h"
 #include "lib/jxl/enc_quant_weights.h"
 #include "lib/jxl/enc_splines.h"
+#include "lib/jxl/enc_state_import.h"
 #include "lib/jxl/enc_toc.h"
 #include "lib/jxl/enc_xyb.h"
 #include "lib/jxl/fields.h"
@@ -1254,6 +1255,7 @@ Status EncodeGroups(const FrameHeader& frame_header,
                     ModularFrameEncoder* enc_modular, ThreadPool* pool,
                     std::vector<std::unique_ptr<BitWriter>>* group_codes,
                     AuxOut* aux_out) {
+  fprintf(stdout, "EncodeGroups\n");
   const PassesSharedState& shared = enc_state->shared;
   JxlMemoryManager* memory_manager = shared.memory_manager;
   const FrameDimensions& frame_dim = shared.frame_dim;
@@ -1426,6 +1428,7 @@ Status ComputeEncodingData(
     FrameHeader& mutable_frame_header, ModularFrameEncoder& enc_modular,
     PassesEncoderState& enc_state,
     std::vector<std::unique_ptr<BitWriter>>* group_codes, AuxOut* aux_out) {
+  fprintf(stdout, "ComputeEncodingData\n");
   JXL_ASSERT(x0 + xsize <= frame_data.xsize);
   JXL_ASSERT(y0 + ysize <= frame_data.ysize);
   JxlMemoryManager* memory_manager = enc_state.memory_manager();
@@ -1622,6 +1625,11 @@ Status ComputeEncodingData(
                                     FrameHeader::kSplines);
   }
 
+  if (cparams.export_encoder_state) {
+    JXL_RETURN_IF_ERROR(SaveEncoderState(cparams.export_filename, &enc_state));
+  }
+
+  // This should only be called once!
   JXL_RETURN_IF_ERROR(EncodeGroups(frame_header, &enc_state, &enc_modular, pool,
                                    group_codes, aux_out));
   if (enc_state.streaming_mode) {
@@ -1967,6 +1975,7 @@ Status EncodeFrameStreaming(JxlMemoryManager* memory_manager,
                             const JxlCmsInterface& cms, ThreadPool* pool,
                             JxlEncoderOutputProcessorWrapper* output_processor,
                             AuxOut* aux_out) {
+  fprintf(stdout, "EncodeFrameStreaming\n");
   PassesEncoderState enc_state{memory_manager};
   SetProgressiveMode(cparams, &enc_state.progressive_splitter);
   FrameHeader frame_header(metadata);
@@ -2080,6 +2089,7 @@ Status EncodeFrameOneShot(JxlMemoryManager* memory_manager,
                           const JxlCmsInterface& cms, ThreadPool* pool,
                           JxlEncoderOutputProcessorWrapper* output_processor,
                           AuxOut* aux_out) {
+  fprintf(stdout, "EncodeFrameOneShot\n");
   PassesEncoderState enc_state{memory_manager};
   SetProgressiveMode(cparams, &enc_state.progressive_splitter);
   FrameHeader frame_header(metadata);
@@ -2126,6 +2136,7 @@ Status EncodeFrame(JxlMemoryManager* memory_manager,
                    const JxlCmsInterface& cms, ThreadPool* pool,
                    JxlEncoderOutputProcessorWrapper* output_processor,
                    AuxOut* aux_out) {
+  fprintf(stdout, "EncodeFrame\n");
   CompressParams cparams = cparams_orig;
   if (cparams.speed_tier == SpeedTier::kTectonicPlate &&
       !cparams.IsLossless()) {

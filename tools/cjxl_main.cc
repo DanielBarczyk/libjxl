@@ -230,6 +230,14 @@ struct CompressArgs {
         "    must be passed in this case.",
         &color_hints_proxy, &ParseAndAppendKeyValue<ColorHintsProxy>, 1);
 
+    cmdline->AddOptionValue('\0', "export_file", "FILENAME",
+                        "Export encoder model to file.",
+                        &export_file, &ParseCString, 1);
+
+    cmdline->AddOptionValue('\0', "import_file", "FILENAME",
+                        "Import encoder model from file.",
+                        &import_file, &ParseCString, 1);
+
     cmdline->AddHelpText("\nExpert options:", 2);
 
     cmdline->AddOptionValue(
@@ -543,6 +551,10 @@ struct CompressArgs {
   CommandLineParser::OptionId opt_alpha_distance_id = -1;
   CommandLineParser::OptionId opt_quality_id = -1;
   CommandLineParser::OptionId opt_modular_group_size_id = -1;
+
+  // Export and import
+  const char* export_file = nullptr;
+  const char* import_file = nullptr;
 };
 
 const char* ModeFromArgs(const CompressArgs& args) {
@@ -925,6 +937,8 @@ void ProcessFlags(const jxl::extras::Codec codec,
   params->premultiply = args->premultiply;
   params->compress_boxes = args->compress_boxes != jxl::Override::kOff;
   params->upsampling_mode = args->upsampling_mode;
+  params->export_file = args->export_file;
+  params->import_file = args->import_file;
 
   // If a metadata field is set to an empty value, it is stripped.
   // Make sure we also strip it when the input image is read with AddJPEGFrame
@@ -996,6 +1010,8 @@ struct JxlOutputProcessor {
 }  // namespace jpegxl
 
 int main(int argc, char** argv) {
+  fprintf(stdout, "cjxl main\n");
+
   std::string version = jpegxl::tools::CodecConfigString(JxlEncoderVersion());
   jpegxl::tools::CompressArgs args;
   jpegxl::tools::CommandLineParser cmdline;
