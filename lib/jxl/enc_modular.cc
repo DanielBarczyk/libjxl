@@ -1232,7 +1232,8 @@ Status ModularFrameEncoder::ComputeTokens(ThreadPool* pool) {
   fprintf(stdout, ">>> ModularFrameEncoder::ComputeTokens\n");
   if (cparams_.import_encoder_state) {
     JXL_DEBUG_V(2, "Skipping ModularFrameEncoder::ComputeTokens because import_file is set to True.");
-    return true;
+    // LANDMARK: Uncommenting this line causes the image to be the one of the model.
+    // return true;
   }
 
   size_t num_streams = stream_images_.size();
