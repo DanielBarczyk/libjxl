@@ -64,6 +64,18 @@ struct Header : public Fields {
   bool all_default;
   pixel_type p1C = 0, p2C = 0, p3Ca = 0, p3Cb = 0, p3Cc = 0, p3Cd = 0, p3Ce = 0;
   uint32_t w[kNumPredictors] = {};
+
+  void Save(FILE* fd) {
+    fwrite(&all_default, sizeof(bool), 1, fd);
+    fwrite(&p1C, sizeof(pixel_type), 7, fd);
+    fwrite(w, sizeof(uint32_t), kNumPredictors, fd);
+  }
+
+  void Load(FILE* fd) {
+    fread(&all_default, sizeof(bool), 1, fd);
+    fread(&p1C, sizeof(pixel_type), 7, fd);
+    fread(w, sizeof(uint32_t), kNumPredictors, fd);
+  }
 };
 
 struct State {

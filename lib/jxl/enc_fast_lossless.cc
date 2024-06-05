@@ -4162,6 +4162,7 @@ void JxlFastLosslessProcessFrame(
     JxlFastLosslessFrameState* frame_state, bool is_last, void* runner_opaque,
     FJxlParallelRunner runner,
     JxlEncoderOutputProcessorWrapper* output_processor) {
+  fprintf(stdout, "======> JxlFastLosslessProcessFrame() in\n");
   auto trivial_runner =
       +[](void*, void* opaque, void fun(void*, size_t), size_t count) {
         for (size_t i = 0; i < count; i++) {

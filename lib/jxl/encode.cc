@@ -697,7 +697,7 @@ bool EncodeFrameIndexBox(const jxl::JxlEncoderFrameIndexBox& frame_index_box,
 }  // namespace
 
 jxl::Status JxlEncoderStruct::ProcessOneEnqueuedInput() { // LANDMARK: Main encode function
-  fprintf(stdout, "ProcessOneEnqueuedInput\n"); 
+  fprintf(stdout, "=====> JxlEncoderStruct::ProcessOneEnqueuedInput() in\n");
   jxl::PaddedBytes header_bytes{&memory_manager};
 
   jxl::JxlEncoderQueuedInput& input = input_queue[0];
@@ -760,6 +760,7 @@ jxl::Status JxlEncoderStruct::ProcessOneEnqueuedInput() { // LANDMARK: Main enco
     codestream_bytes_written_end_of_frame += header_bytes.size();
 
     if (MustUseContainer()) {
+      fprintf(stdout, ">>>>>>>>>>ITS A MUSTUSECONTAINER\n");
       // Add "JXL " and ftyp box.
       {
         JXL_ASSIGN_OR_RETURN(auto buffer, output_processor.GetBuffer(
@@ -883,6 +884,7 @@ jxl::Status JxlEncoderStruct::ProcessOneEnqueuedInput() { // LANDMARK: Main enco
 
     const size_t frame_start_pos = output_processor.CurrentPosition();
     if (MustUseContainer()) {
+      // return jxl::Status(1); //unexpected container
       if (!last_frame || jxlp_counter > 0) {
         // If this is the last frame and no jxlp boxes were used yet, it's
         // slightly more efficient to write a jxlc box since it has 4 bytes
@@ -896,6 +898,7 @@ jxl::Status JxlEncoderStruct::ProcessOneEnqueuedInput() { // LANDMARK: Main enco
     JXL_RETURN_IF_ERROR(AppendData(output_processor, header_bytes));
 
     if (input_frame) {
+      fprintf(stdout, ">>>>>>>>>>ITS A FRAME\n");
       frame_index_box.AddFrame(codestream_bytes_written_end_of_frame, duration,
                                input_frame->option_values.frame_index_box);
 
@@ -948,6 +951,7 @@ jxl::Status JxlEncoderStruct::ProcessOneEnqueuedInput() { // LANDMARK: Main enco
       frame_info.timecode = timecode;
       frame_info.name = input_frame->option_values.frame_name;
 
+      fprintf(stdout, "Calling EncodeFrame from encode.cc");
       if (!jxl::EncodeFrame(&memory_manager, input_frame->option_values.cparams,
                             frame_info, &metadata, input_frame->frame_data, cms,
                             thread_pool.get(), &output_processor,
@@ -976,6 +980,7 @@ jxl::Status JxlEncoderStruct::ProcessOneEnqueuedInput() { // LANDMARK: Main enco
         frame_codestream_size - header_bytes.size();
 
     if (MustUseContainer()) {
+      // return jxl::Status(1); //unexpected container
       output_processor.Seek(frame_start_pos);
       std::vector<uint8_t> box_header(box_header_size);
       if (!use_large_box &&
@@ -1022,32 +1027,34 @@ jxl::Status JxlEncoderStruct::ProcessOneEnqueuedInput() { // LANDMARK: Main enco
     }
   } else {
     // Not a frame, so is a box instead
-    jxl::MemoryManagerUniquePtr<jxl::JxlEncoderQueuedBox> box =
-        std::move(input.box);
-    input_queue.erase(input_queue.begin());
-    num_queued_boxes--;
+    return jxl::Status(1); // Unexpected box
+    // jxl::MemoryManagerUniquePtr<jxl::JxlEncoderQueuedBox> box =
+    //     std::move(input.box);
+    // input_queue.erase(input_queue.begin());
+    // num_queued_boxes--;
 
-    if (box->compress_box) {
-      jxl::PaddedBytes compressed(&memory_manager, 4);
-      // Prepend the original box type in the brob box contents
-      for (size_t i = 0; i < 4; i++) {
-        compressed[i] = static_cast<uint8_t>(box->type[i]);
-      }
-      if (JXL_ENC_SUCCESS !=
-          BrotliCompress((brotli_effort >= 0 ? brotli_effort : 4),
-                         box->contents.data(), box->contents.size(),
-                         &compressed)) {
-        return JXL_API_ERROR(this, JXL_ENC_ERR_GENERIC,
-                             "Brotli compression for brob box failed");
-      }
+    // if (box->compress_box) {
+    //   jxl::PaddedBytes compressed(&memory_manager, 4);
+    //   // Prepend the original box type in the brob box contents
+    //   for (size_t i = 0; i < 4; i++) {
+    //     compressed[i] = static_cast<uint8_t>(box->type[i]);
+    //   }
+    //   if (JXL_ENC_SUCCESS !=
+    //       BrotliCompress((brotli_effort >= 0 ? brotli_effort : 4),
+    //                      box->contents.data(), box->contents.size(),
+    //                      &compressed)) {
+    //     return JXL_API_ERROR(this, JXL_ENC_ERR_GENERIC,
+    //                          "Brotli compression for brob box failed");
+    //   }
 
-      JXL_RETURN_IF_ERROR(
-          AppendBoxWithContents(jxl::MakeBoxType("brob"), compressed));
-    } else {
-      JXL_RETURN_IF_ERROR(AppendBoxWithContents(box->type, box->contents));
-    }
+    //   JXL_RETURN_IF_ERROR(
+    //       AppendBoxWithContents(jxl::MakeBoxType("brob"), compressed));
+    // } else {
+    //   JXL_RETURN_IF_ERROR(AppendBoxWithContents(box->type, box->contents));
+    // }
   }
 
+  fprintf(stdout, "<===== JxlEncoderStruct::ProcessOneEnqueuedInput() out\n");
   return jxl::OkStatus();
 }
 
@@ -2566,6 +2573,7 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderSetOutputProcessor(
 
 JxlEncoderStatus JxlEncoderProcessOutput(JxlEncoder* enc, uint8_t** next_out,
                                          size_t* avail_out) {
+  fprintf(stdout, "====> JxlEncoderProcessOutput in\n");
   if (!enc->output_processor.SetAvailOut(next_out, avail_out)) {
     return JXL_API_ERROR(enc, JXL_ENC_ERR_API_USAGE,
                          "Cannot call JxlEncoderProcessOutput after calling "
@@ -2576,7 +2584,7 @@ JxlEncoderStatus JxlEncoderProcessOutput(JxlEncoder* enc, uint8_t** next_out,
       return JxlErrorOrStatus::Error();
     }
   }
-
+  fprintf(stdout, "<==== JxlEncoderProcessOutput out\n");
   if (!enc->input_queue.empty() || enc->output_processor.HasOutputToWrite()) {
     return JxlErrorOrStatus::MoreOutput();
   }

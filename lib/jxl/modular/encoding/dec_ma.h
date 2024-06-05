@@ -28,6 +28,26 @@ struct PropertyDecisionNode {
   int64_t predictor_offset;
   uint32_t multiplier;
 
+  void Save(FILE* fd) {
+    fwrite(&splitval, sizeof(PropertyVal), 1, fd);
+    fwrite(&property, sizeof(int16_t), 1, fd);
+    fwrite(&lchild, sizeof(uint32_t), 1, fd);
+    fwrite(&rchild, sizeof(uint32_t), 1, fd);
+    fwrite(&predictor, sizeof(Predictor), 1, fd);
+    fwrite(&predictor_offset, sizeof(int64_t), 1, fd);
+    fwrite(&multiplier, sizeof(uint32_t), 1, fd);
+  }
+
+  void Load(FILE* fd) {
+    fread(&splitval, sizeof(PropertyVal), 1, fd);
+    fread(&property, sizeof(int16_t), 1, fd);
+    fread(&lchild, sizeof(uint32_t), 1, fd);
+    fread(&rchild, sizeof(uint32_t), 1, fd);
+    fread(&predictor, sizeof(Predictor), 1, fd);
+    fread(&predictor_offset, sizeof(int64_t), 1, fd);
+    fread(&multiplier, sizeof(uint32_t), 1, fd);
+  }
+
   PropertyDecisionNode(int p, int split_val, int lchild, int rchild,
                        Predictor predictor, int64_t predictor_offset,
                        uint32_t multiplier)

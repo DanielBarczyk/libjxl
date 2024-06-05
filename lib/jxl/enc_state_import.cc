@@ -9,6 +9,15 @@ namespace jxl {
 Status SaveEncoderState(const char * filename, PassesEncoderState* enc_state) {
     JXL_DEBUG_V(2, "Exporting encoder state to file %s", filename);
     
+    fprintf(stdout,
+        "Beginning Encoder State debug.\nPasses: %lu\nhistograms: %lu %lu %lu %lu\n",
+        enc_state->passes.size(),
+        enc_state->histogram_idx.size(),
+        enc_state->coeffs.size(),
+        enc_state->special_frames.size(),
+        enc_state->shared.coeff_orders.size()
+    );
+
     FILE * export_fd;
     JXL_RETURN_IF_ERROR(export_fd = fopen(filename, "wb"));
 

@@ -88,6 +88,9 @@ class ModularFrameEncoder {
   Status AddQuantTable(size_t size_x, size_t size_y,
                        const QuantEncoding& encoding, size_t idx);
 
+  Status SaveModel();
+  Status LoadModel();
+
   std::vector<size_t> ac_metadata_size;
   std::vector<uint8_t> extra_dc_precision;
 
@@ -100,20 +103,20 @@ class ModularFrameEncoder {
                              bool groupwise);
   JxlMemoryManager* memory_manager_;
   std::vector<Image> stream_images_;
-  std::vector<ModularOptions> stream_options_;
+  std::vector<ModularOptions> stream_options_; // done
   std::vector<uint32_t> quants_;
 
-  Tree tree_;
-  std::vector<std::vector<Token>> tree_tokens_;
-  std::vector<GroupHeader> stream_headers_;
-  std::vector<std::vector<Token>> tokens_;
+  Tree tree_; // done
+  std::vector<std::vector<Token>> tree_tokens_; // done
+  std::vector<GroupHeader> stream_headers_; // done
+  std::vector<std::vector<Token>> tokens_; // done
   EntropyEncodingData code_;
   std::vector<uint8_t> context_map_;
   FrameDimensions frame_dim_;
   CompressParams cparams_;
   std::vector<size_t> tree_splits_;
   std::vector<std::vector<uint32_t>> gi_channel_;
-  std::vector<size_t> image_widths_;
+  std::vector<size_t> image_widths_; // done
 
   struct GroupParams {
     Rect rect;

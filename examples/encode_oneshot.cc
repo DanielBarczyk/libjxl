@@ -156,6 +156,7 @@ bool ReadPFM(const char* filename, std::vector<float>* pixels, uint32_t* xsize,
  */
 bool EncodeJxlOneshot(const std::vector<float>& pixels, const uint32_t xsize,
                       const uint32_t ysize, std::vector<uint8_t>* compressed) {
+  fprintf(stdout, ">>>>>>>>>>>>EncodeJxlOneshot\n");
   auto enc = JxlEncoderMake(/*memory_manager=*/nullptr);
   auto runner = JxlThreadParallelRunnerMake(
       /*memory_manager=*/nullptr,

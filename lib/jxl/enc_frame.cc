@@ -1428,7 +1428,12 @@ Status ComputeEncodingData(
     FrameHeader& mutable_frame_header, ModularFrameEncoder& enc_modular,
     PassesEncoderState& enc_state,
     std::vector<std::unique_ptr<BitWriter>>* group_codes, AuxOut* aux_out) {
-  fprintf(stdout, "ComputeEncodingData\n");
+  fprintf(stdout, "========> ComputeEncodingData() in\n");
+
+  if (cparams.import_encoder_state) {    
+    JXL_RETURN_IF_ERROR(enc_modular.LoadModel());
+  }
+
   JXL_ASSERT(x0 + xsize <= frame_data.xsize);
   JXL_ASSERT(y0 + ysize <= frame_data.ysize);
   JxlMemoryManager* memory_manager = enc_state.memory_manager();
@@ -1605,6 +1610,7 @@ Status ComputeEncodingData(
   }
 
   if (cparams.modular_mode || !extra_channels.empty()) {
+    fprintf(stdout, "========> WARN: ComputeEncodingData will repeat\n");
     JXL_RETURN_IF_ERROR(enc_modular.ComputeEncodingData(
         frame_header, metadata->m, &color, extra_channels, group_rect,
         frame_dim, frame_area_rect, &enc_state, cms, pool, aux_out,
@@ -1625,10 +1631,6 @@ Status ComputeEncodingData(
                                     FrameHeader::kSplines);
   }
 
-  if (cparams.export_encoder_state) {
-    JXL_RETURN_IF_ERROR(SaveEncoderState(cparams.export_filename, &enc_state));
-  }
-
   // This should only be called once!
   JXL_RETURN_IF_ERROR(EncodeGroups(frame_header, &enc_state, &enc_modular, pool,
                                    group_codes, aux_out));
@@ -1638,6 +1640,13 @@ Status ComputeEncodingData(
     enc_modular.ClearStreamData(ModularStreamId::ACMetadata(group_index));
     enc_modular.ClearModularStreamData();
   }
+
+  // LANDMARK: This is when data can be saved!
+  if (cparams.export_encoder_state) {
+    JXL_RETURN_IF_ERROR(enc_modular.SaveModel());
+    // JXL_RETURN_IF_ERROR(SaveEncoderState(cparams.export_filename, &enc_state));
+  }
+  fprintf(stdout, "<======== ComputeEncodingData() out\n");
   return true;
 }
 
@@ -1975,7 +1984,7 @@ Status EncodeFrameStreaming(JxlMemoryManager* memory_manager,
                             const JxlCmsInterface& cms, ThreadPool* pool,
                             JxlEncoderOutputProcessorWrapper* output_processor,
                             AuxOut* aux_out) {
-  fprintf(stdout, "EncodeFrameStreaming\n");
+  fprintf(stdout, "=======> EncodeFrameStreaming() in\n");
   PassesEncoderState enc_state{memory_manager};
   SetProgressiveMode(cparams, &enc_state.progressive_splitter);
   FrameHeader frame_header(metadata);
@@ -2023,6 +2032,7 @@ Status EncodeFrameStreaming(JxlMemoryManager* memory_manager,
     enc_state.dc_group_index = dc_ix;
     enc_state.histogram_idx = std::vector<size_t>(group_xsize * group_ysize, i);
     std::vector<std::unique_ptr<BitWriter>> group_codes;
+    // This can be called multiple times due to streaming.
     JXL_RETURN_IF_ERROR(ComputeEncodingData(
         cparams, frame_info, metadata, frame_data, jpeg_data.get(), x0, y0,
         xsize, ysize, cms, pool, frame_header, enc_modular, enc_state,
@@ -2089,8 +2099,10 @@ Status EncodeFrameOneShot(JxlMemoryManager* memory_manager,
                           const JxlCmsInterface& cms, ThreadPool* pool,
                           JxlEncoderOutputProcessorWrapper* output_processor,
                           AuxOut* aux_out) {
-  fprintf(stdout, "EncodeFrameOneShot\n");
+  fprintf(stdout, "=======> EncodeFrameOneShot() in\n");
   PassesEncoderState enc_state{memory_manager};
+  // LANDMARK: Encoder state can be read here!
+
   SetProgressiveMode(cparams, &enc_state.progressive_splitter);
   FrameHeader frame_header(metadata);
   std::unique_ptr<jpeg::JPEGData> jpeg_data;
@@ -2123,7 +2135,8 @@ Status EncodeFrameOneShot(JxlMemoryManager* memory_manager,
   writer.AppendByteAligned(group_codes);
   PaddedBytes frame_bytes = std::move(writer).TakeBytes();
   JXL_RETURN_IF_ERROR(AppendData(*output_processor, frame_bytes));
-
+  
+  fprintf(stdout, "<======= EncodeFrameOneShot() out\n");
   return true;
 }
 
@@ -2136,7 +2149,7 @@ Status EncodeFrame(JxlMemoryManager* memory_manager,
                    const JxlCmsInterface& cms, ThreadPool* pool,
                    JxlEncoderOutputProcessorWrapper* output_processor,
                    AuxOut* aux_out) {
-  fprintf(stdout, "EncodeFrame\n");
+  fprintf(stdout, "======> EncodeFrame() in\n");
   CompressParams cparams = cparams_orig;
   if (cparams.speed_tier == SpeedTier::kTectonicPlate &&
       !cparams.IsLossless()) {
@@ -2271,14 +2284,15 @@ Status EncodeFrame(JxlMemoryManager* memory_manager,
     return JXL_FAILURE("Can't add JPEG frame to XYB codestream");
   }
 
-  if (CanDoStreamingEncoding(cparams, frame_info, *metadata, frame_data)) {
-    return EncodeFrameStreaming(memory_manager, cparams, frame_info, metadata,
-                                frame_data, cms, pool, output_processor,
-                                aux_out);
-  } else {
+  fprintf(stdout, "<====== EncodeFrame() out\n");
+  // if (CanDoStreamingEncoding(cparams, frame_info, *metadata, frame_data)) {
+  //   return EncodeFrameStreaming(memory_manager, cparams, frame_info, metadata,
+  //                               frame_data, cms, pool, output_processor,
+  //                               aux_out);
+  // } else {
     return EncodeFrameOneShot(memory_manager, cparams, frame_info, metadata,
                               frame_data, cms, pool, output_processor, aux_out);
-  }
+  // }
 }
 
 Status EncodeFrame(JxlMemoryManager* memory_manager,

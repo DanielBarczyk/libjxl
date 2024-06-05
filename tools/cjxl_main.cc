@@ -1010,7 +1010,7 @@ struct JxlOutputProcessor {
 }  // namespace jpegxl
 
 int main(int argc, char** argv) {
-  fprintf(stdout, "cjxl main\n");
+  fprintf(stdout, "=> cjxl main\n");
 
   std::string version = jpegxl::tools::CodecConfigString(JxlEncoderVersion());
   jpegxl::tools::CompressArgs args;

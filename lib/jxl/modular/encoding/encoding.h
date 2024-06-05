@@ -52,6 +52,27 @@ struct GroupHeader : public Fields {
   weighted::Header wp_header;
 
   std::vector<Transform> transforms;
+
+  void Save(FILE* fd) {
+    fwrite(&use_global_tree, sizeof(bool), 1, fd);
+    wp_header.Save(fd);
+    int transforms_size = transforms.size();
+    fwrite(&transforms_size, sizeof(int), 1, fd);
+    for (int i=0; i<transforms_size; i++) {
+      transforms[i].Save(fd);
+    }
+  }
+
+  void Load(FILE* fd) {
+    fread(&use_global_tree, sizeof(bool), 1, fd);
+    wp_header.Load(fd);
+    int transforms_size;
+    fread(&transforms_size, sizeof(int), 1, fd);
+    transforms.resize(transforms_size);
+    for (int i=0; i<transforms_size; i++) {
+      transforms[i].Load(fd);
+    }
+  }
 };
 
 FlatTree FilterTree(const Tree &global_tree,

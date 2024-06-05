@@ -80,6 +80,39 @@ class Transform : public Fields {
   // default constructor for bundles.
   Transform() : Transform(TransformId::kInvalid) {}
 
+  void Save(FILE* fd) {
+    fwrite(&id, sizeof(TransformId), 1, fd);
+    fwrite(&begin_c, sizeof(uint32_t), 1, fd);
+    fwrite(&rct_type, sizeof(uint32_t), 1, fd);
+    fwrite(&num_c, sizeof(uint32_t), 1, fd);
+    fwrite(&nb_colors, sizeof(uint32_t), 1, fd);
+    fwrite(&nb_deltas, sizeof(uint32_t), 1, fd);
+    int squeezes_size = squeezes.size();
+    fwrite(&squeezes_size, sizeof(int), 1, fd);
+    fwrite(&squeezes[0], sizeof(SqueezeParams), squeezes_size, fd);
+    fwrite(&max_delta_error, sizeof(int), 1, fd);
+    fwrite(&predictor, sizeof(Predictor), 1, fd);
+    fwrite(&ordered_palette, sizeof(bool), 1, fd);
+    fwrite(&lossy_palette, sizeof(bool), 1, fd);
+  }
+
+  void Load(FILE* fd) {
+    fread(&id, sizeof(TransformId), 1, fd);
+    fread(&begin_c, sizeof(uint32_t), 1, fd);
+    fread(&rct_type, sizeof(uint32_t), 1, fd);
+    fread(&num_c, sizeof(uint32_t), 1, fd);
+    fread(&nb_colors, sizeof(uint32_t), 1, fd);
+    fread(&nb_deltas, sizeof(uint32_t), 1, fd);
+    int squeezes_size;
+    fread(&squeezes_size, sizeof(int), 1, fd);
+    squeezes.resize(squeezes_size);
+    fread(&squeezes[0], sizeof(SqueezeParams), squeezes_size, fd);
+    fread(&max_delta_error, sizeof(int), 1, fd);
+    fread(&predictor, sizeof(Predictor), 1, fd);
+    fread(&ordered_palette, sizeof(bool), 1, fd);
+    fread(&lossy_palette, sizeof(bool), 1, fd);
+  }
+
   Status VisitFields(Visitor *JXL_RESTRICT visitor) override {
     JXL_QUIET_RETURN_IF_ERROR(
         visitor->U32(Val(static_cast<uint32_t>(TransformId::kRCT)),

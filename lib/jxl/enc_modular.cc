@@ -1034,6 +1034,11 @@ Status ModularFrameEncoder::ComputeEncodingData(
 }
 
 Status ModularFrameEncoder::ComputeTree(ThreadPool* pool) {
+  fprintf(stdout, ">>> ModularFrameEncoder::ComputeTree\n");
+    if (cparams_.import_encoder_state) {
+    JXL_DEBUG_V(2, "Skipping ModularFrameEncoder::ComputeTree because import_file is set to True.");
+    return true;
+  }
   std::vector<ModularMultiplierInfo> multiplier_info;
   if (!quants_.empty()) {
     for (uint32_t stream_id = 0; stream_id < stream_images_.size();
@@ -1222,7 +1227,14 @@ Status ModularFrameEncoder::ComputeTree(ThreadPool* pool) {
   return true;
 }
 
+// Needs to be saved together: tokens_ stream_headers_ image_widths_
 Status ModularFrameEncoder::ComputeTokens(ThreadPool* pool) {
+  fprintf(stdout, ">>> ModularFrameEncoder::ComputeTokens\n");
+  if (cparams_.import_encoder_state) {
+    JXL_DEBUG_V(2, "Skipping ModularFrameEncoder::ComputeTokens because import_file is set to True.");
+    return true;
+  }
+
   size_t num_streams = stream_images_.size();
   stream_headers_.resize(num_streams);
   tokens_.resize(num_streams);
@@ -1765,4 +1777,136 @@ Status ModularFrameEncoder::AddQuantTable(size_t size_x, size_t size_y,
   }
   return true;
 }
+
+Status ModularFrameEncoder::SaveModel() {
+  JXL_DEBUG_V(2, "Exporting ModularEncoder State to file %s", cparams_.export_filename);
+
+  FILE * export_fd;
+  JXL_RETURN_IF_ERROR(export_fd = fopen(cparams_.export_filename, "wb"));
+
+  // ModularFrameEncoder::ComputeTokens
+  // Needs to be saved together: tokens_ stream_headers_ image_widths_
+  JXL_DEBUG_V(2, "Exporting ModularEncoder State: saving tokens_");
+  int tokens_outer_size = tokens_.size();
+  fwrite(&tokens_outer_size, sizeof(int), 1, export_fd);
+  for (int i=0; i<tokens_outer_size; i++) {
+    int tokens_inner_size = tokens_[i].size();
+    fwrite(&tokens_inner_size, sizeof(int), 1, export_fd);
+    fwrite(&tokens_[i][0], sizeof(Token), tokens_inner_size, export_fd);
+  }
+
+  JXL_DEBUG_V(2, "Exporting ModularEncoder State: saving stream_headers_");
+  int stream_headers_size = stream_headers_.size();
+  fwrite(&stream_headers_size, sizeof(int), 1, export_fd);
+  for (int i=0; i<stream_headers_size; i++) {
+    stream_headers_[i].Save(export_fd);
+  }
+
+  JXL_DEBUG_V(2, "Exporting ModularEncoder State: saving image_widths_");
+  int image_widths_size = image_widths_.size();
+  fwrite(&image_widths_size, sizeof(int), 1, export_fd);
+  fwrite(&image_widths_, sizeof(size_t), image_widths_size, export_fd);
+
+  JXL_DEBUG_V(2, "Exporting ModularEncoder State: saving tree_");
+  int tree_size = tree_.size();
+  fwrite(&tree_size, sizeof(int), 1, export_fd);
+  for (int i=0; i<tree_size; i++) {
+    tree_[i].Save(export_fd);
+  }
+
+  JXL_DEBUG_V(2, "Exporting ModularEncoder State: saving tree_tokens_");
+  int tree_tokens_outer_size = tree_tokens_.size();
+  fwrite(&tree_tokens_outer_size, sizeof(int), 1, export_fd);
+  for (int i=0; i<tree_tokens_outer_size; i++) {
+    int tree_tokens_inner_size = tree_tokens_[i].size();
+    fwrite(&tree_tokens_inner_size, sizeof(int), 1, export_fd);
+    fwrite(&tree_tokens_[i][0], sizeof(Token), tree_tokens_inner_size, export_fd);
+  }
+
+  JXL_DEBUG_V(2, "Exporting ModularEncoder State: saving stream_options_");
+  int stream_options_size = stream_options_.size();
+  fwrite(&stream_options_size, sizeof(int), 1, export_fd);
+  for (int i=0; i<stream_options_size; i++) {
+    stream_options_[i].Save(export_fd);
+  }
+
+  fclose(export_fd);
+  JXL_DEBUG_V(2, "Exporting ModularEncoder finished successfully.");
+  return true;
+}
+
+Status ModularFrameEncoder::LoadModel() {
+  JXL_DEBUG_V(2, "Importing ModularEncoder State from file %s", cparams_.import_filename);
+
+  FILE * import_fd;
+  JXL_RETURN_IF_ERROR(import_fd = fopen(cparams_.import_filename, "rb"));
+
+  // ModularFrameEncoder::ComputeTokens
+  // std::vector<std::vector<Token>> tokens_;
+  // std::vector<GroupHeader> stream_headers_;
+  // std::vector<size_t> image_widths_;
+
+  JXL_DEBUG_V(2, "Importing ModularEncoder State: loading tokens_");
+  int tokens_outer_size;
+  fread(&tokens_outer_size, sizeof(int), 1, import_fd);
+  tokens_.resize(tokens_outer_size);
+
+  for (int i=0; i<tokens_outer_size; i++) {
+    int tokens_inner_size;
+    fread(&tokens_inner_size, sizeof(int), 1, import_fd);
+    tokens_[i].resize(tokens_inner_size);
+    fread(&tokens_[i][0], sizeof(Token), tokens_inner_size, import_fd);
+  }
+
+  JXL_DEBUG_V(2, "Importing ModularEncoder State: loading stream_headers_");
+  int stream_headers_size;
+  fread(&stream_headers_size, sizeof(int), 1, import_fd);
+  stream_headers_.resize(stream_headers_size);
+  for (int i=0; i<stream_headers_size; i++) {
+    stream_headers_[i].Load(import_fd);
+  }
+
+  JXL_DEBUG_V(2, "Importing ModularEncoder State: loading image_widths_");
+  int image_widths_size;
+  fread(&image_widths_size, sizeof(int), 1, import_fd);
+  image_widths_.resize(image_widths_size);
+  fread(&image_widths_[0], sizeof(size_t), image_widths_size, import_fd);
+
+  JXL_DEBUG_V(2, "Importing ModularEncoder State: loading tree_");
+  int tree_size;
+  fread(&tree_size, sizeof(int), 1, import_fd);
+  tree_.resize(tree_size);
+  for (int i=0; i<tree_size; i++) {
+    tree_[i].Load(import_fd);
+  }
+
+  JXL_DEBUG_V(2, "Importing ModularEncoder State: loading tree_tokens_");
+  int tree_tokens_outer_size;
+  fread(&tree_tokens_outer_size, sizeof(int), 1, import_fd);
+  tree_tokens_.resize(tree_tokens_outer_size);
+  for (int i=0; i<tree_tokens_outer_size; i++) {
+    int tree_tokens_inner_size;
+    fread(&tree_tokens_inner_size, sizeof(int), 1, import_fd);
+    tree_tokens_[i].resize(tree_tokens_inner_size);
+    fread(&tree_tokens_[i][0], sizeof(Token), tree_tokens_inner_size, import_fd);
+  }
+
+  JXL_DEBUG_V(2, "Importing ModularEncoder State: loading stream_options_");
+  int stream_options_size;
+  fread(&stream_options_size, sizeof(int), 1, import_fd);
+  stream_options_.resize(stream_options_size);
+  for (int i=0; i<stream_options_size; i++) {
+    stream_options_[i].Load(import_fd);
+  }
+
+  fclose(import_fd);
+  JXL_DEBUG_V(2, "Importing ModularEncoder finished successfully.");
+  return true;
+}
+
+  // TO DO: Try this lib.
+  // std::ofstream os("out.cereal", std::ios::binary);
+  // cereal::BinaryOutputArchive archive(os);
+  // archive(tokens_); //, stream_headers_, image_widths_);
+
 }  // namespace jxl

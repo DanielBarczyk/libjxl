@@ -116,6 +116,47 @@ struct ModularOptions {
 
   // Ignore the image and just pretend all tokens are zeroes
   bool zero_tokens = false;
+
+  void Save(FILE* fd) {
+    fwrite(&max_chan_size, sizeof(size_t), 1, fd);
+    fwrite(&group_dim, sizeof(size_t), 1, fd);
+    fwrite(&nb_repeats, sizeof(float), 1, fd);
+    fwrite(&max_properties, sizeof(int), 1, fd);
+    int splitting_heuristics_properties_size = splitting_heuristics_properties.size();
+    fwrite(&splitting_heuristics_properties_size, sizeof(int), 1, fd);
+    fwrite(&splitting_heuristics_properties[0], sizeof(uint32_t), splitting_heuristics_properties_size, fd);
+    fwrite(&splitting_heuristics_node_threshold, sizeof(float), 1, fd);
+    fwrite(&max_property_values, sizeof(size_t), 1, fd);
+    fwrite(&predictor, sizeof(Predictor), 1, fd);
+    fwrite(&wp_mode, sizeof(int), 1, fd);
+    fwrite(&fast_decode_multiplier, sizeof(float), 1, fd);
+    fwrite(&wp_tree_mode, sizeof(TreeMode), 1, fd);
+    fwrite(&skip_encoder_fast_path, sizeof(bool), 1, fd);
+    fwrite(&tree_kind, sizeof(TreeKind), 1, fd);
+    histogram_params.Save(fd);
+    fwrite(&zero_tokens, sizeof(bool), 1, fd);
+  }
+
+  void Load(FILE* fd) {
+    fread(&max_chan_size, sizeof(size_t), 1, fd);
+    fread(&group_dim, sizeof(size_t), 1, fd);
+    fread(&nb_repeats, sizeof(float), 1, fd);
+    fread(&max_properties, sizeof(int), 1, fd);
+    int splitting_heuristics_properties_size;
+    fread(&splitting_heuristics_properties_size, sizeof(int), 1, fd);
+    splitting_heuristics_properties.resize(splitting_heuristics_properties_size);
+    fread(&splitting_heuristics_properties[0], sizeof(uint32_t), splitting_heuristics_properties_size, fd);
+    fread(&splitting_heuristics_node_threshold, sizeof(float), 1, fd);
+    fread(&max_property_values, sizeof(size_t), 1, fd);
+    fread(&predictor, sizeof(Predictor), 1, fd);
+    fread(&wp_mode, sizeof(int), 1, fd);
+    fread(&fast_decode_multiplier, sizeof(float), 1, fd);
+    fread(&wp_tree_mode, sizeof(TreeMode), 1, fd);
+    fread(&skip_encoder_fast_path, sizeof(bool), 1, fd);
+    fread(&tree_kind, sizeof(TreeKind), 1, fd);
+    histogram_params.Load(fd);
+    fread(&zero_tokens, sizeof(bool), 1, fd);
+  }
 };
 
 }  // namespace jxl

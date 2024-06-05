@@ -95,7 +95,7 @@ bool SetupFrame(JxlEncoder* enc, JxlEncoderFrameSettings* settings,
 }
 
 bool ReadCompressedOutput(JxlEncoder* enc, std::vector<uint8_t>* compressed) {
-  fprintf(stdout, "ReadCompressedOutput in\n");
+  fprintf(stdout, "===> ReadCompressedOutput in\n");
   compressed->clear();
   compressed->resize(4096);
   uint8_t* next_out = compressed->data();
@@ -115,14 +115,14 @@ bool ReadCompressedOutput(JxlEncoder* enc, std::vector<uint8_t>* compressed) {
     fprintf(stderr, "JxlEncoderProcessOutput failed.\n");
     return false;
   }
-  fprintf(stdout, "ReadCompressedOutput out\n");
+  fprintf(stdout, "<=== ReadCompressedOutput out\n");
   return true;
 }
 
 bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
                     const std::vector<uint8_t>* jpeg_bytes,
                     std::vector<uint8_t>* compressed) {
-  fprintf(stdout, "EncodeImageJXL func in\n");
+  fprintf(stdout, "==> EncodeImageJXL func in\n");
   
   auto encoder = JxlEncoderMake(params.memory_manager);
   JxlEncoder* enc = encoder.get();
@@ -233,7 +233,6 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
       return false;
     }
   } else {
-    fprintf(stdout, "not jpeg in\n");
     size_t num_alpha_channels = 0;  // Adjusted below.
     JxlBasicInfo basic_info = ppf.info;
     basic_info.xsize *= params.already_downsampled;
@@ -385,11 +384,8 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
         return false;
       }
     }
-    fprintf(stdout, "not jpeg out\n");
   }
-  fprintf(stdout, "JxlEncoderCloseInput start\n");
   JxlEncoderCloseInput(enc);
-  fprintf(stdout, "JxlEncoderCloseInput end\n");
   if (params.HasOutputProcessor()) {
     fprintf(stdout, "HasOutputProcessor true\n");
     if (JXL_ENC_SUCCESS != JxlEncoderFlushInput(enc)) {
@@ -400,7 +396,7 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
     fprintf(stdout, "HasOutputProcessor false\n");
     return false;
   }
-  fprintf(stdout, "EncodeImageJXL func out\n");
+  fprintf(stdout, "<== EncodeImageJXL func out\n");
   return true;
 }
 
